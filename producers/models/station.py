@@ -28,7 +28,6 @@ class Station(Producer):
         )
 
         topic_name = f"org.chicago.cta.station.arrivals.{station_name}"
-        # TODO: Is good 1 partition and 1 repl?
         super().__init__(
             topic_name,
             key_schema=self.key_schema,

@@ -4,7 +4,6 @@ import json
 import logging
 from pathlib import Path
 import random
-import urllib.parse
 
 import requests
 
@@ -65,18 +64,22 @@ class Weather(Producer):
 
     def run(self, month):
         self._set_weather(month)
-        logger.info(f"Sending message to kafka - {self.temp}F - {self.status}")
+        logger.info(
+            f"Sending message to kafka - temp: {self.temp}F, status: {self.status}"
+        )
         resp = requests.post(
             f"{Weather.rest_proxy_url}/topics/{self.topic_name}",
-            headers={"Content-Type": "application/vnd.kafka.json.v2+json"},
+            headers={"Content-Type": "application/vnd.kafka.avro.v2+json"},
             data=json.dumps(
                 {
+                    "key_schema": json.dumps(Weather.key_schema),
+                    "value_schema": json.dumps(Weather.value_schema),
                     "records": [
                         {
-                            "key": self.time_millis(),
-                            "value": {"temperature": self.temp, "status": self.status},
+                            "key": {"timestamp": self.time_millis()},
+                            "value": {"temperature": self.temp, "status": self.status.name},
                         }
-                    ]
+                    ],
                 }
             ),
         )

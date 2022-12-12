@@ -1,10 +1,8 @@
 """Defines core consumer functionality"""
 import logging
 
-import confluent_kafka
-from confluent_kafka import Consumer, OFFSET_BEGINNING, OFFSET_END
+from confluent_kafka import Consumer, OFFSET_BEGINNING
 from confluent_kafka.avro import AvroConsumer
-from confluent_kafka.avro.serializer import SerializerError
 from tornado import gen
 
 
@@ -32,13 +30,13 @@ class KafkaConsumer:
 
         self.broker_properties = {
             "bootstrap.servers": "localhost:9092",
+            "auto.offset.reset": "earliest" if self.offset_earliest else "latest",
             "client.id": "com.udacity.opt.consumer.client.id",
             "group.id": "com.udacity.opt.consumer.group.id",
         }
 
         if is_avro is True:
             self.broker_properties["schema.registry.url"] = "http://localhost:8081"
-            # TODO: Do I need the reader_key_schema and reader_value_schema?
             self.consumer = AvroConsumer(self.broker_properties)
         else:
             self.consumer = Consumer(self.broker_properties)
@@ -47,10 +45,9 @@ class KafkaConsumer:
 
     def on_assign(self, consumer, partitions):
         """Callback for when topic assignment takes place"""
-        offset_value = OFFSET_BEGINNING if self.offset_earliest else OFFSET_END
-        for partition in partitions:
-            partition.offset = offset_value
-            pass
+        if self.offset_earliest:
+            for partition in partitions:
+                partition.offset = OFFSET_BEGINNING
 
         logger.info("partitions assigned for %s", self.topic_name_pattern)
         consumer.assign(partitions)

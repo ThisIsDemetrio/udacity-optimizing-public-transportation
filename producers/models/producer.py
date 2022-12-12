@@ -31,7 +31,6 @@ class Producer:
         self.num_partitions = num_partitions
         self.num_replicas = num_replicas
 
-        # TODO: Anything missing here?
         self.broker_properties = {
             "bootstrap.servers": "localhost:9092",
             "client.id": "com.udacity.opt.producer.client.id",
